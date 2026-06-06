@@ -6,6 +6,7 @@ import torch
 import torchaudio.transforms as T
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import OneCycleLR
 from tqdm import tqdm
 import numpy as np
@@ -120,11 +121,11 @@ def train():
     
     num_epochs = 100
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-    optimizer = optim.Adam(model.parameters(), lr=0.0005, weight_decay=0.01)
+    optimizer = AdamW(model.parameters(), lr=1e-3, weight_decay=0.01)
     
     scheduler = OneCycleLR(
         optimizer=optimizer,
-        max_lr=0.002,
+        max_lr=1e-2,
         steps_per_epoch=len(train_dataloader),
         epochs=num_epochs,
         pct_start=0.1,
@@ -200,3 +201,6 @@ def train():
             
     writer.close()
     print(f"Training completed! Best accuracy: {best_accuracy:.2f}%")
+    
+if __name__ == "__main__":
+    train()
