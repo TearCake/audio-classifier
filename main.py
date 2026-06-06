@@ -8,6 +8,8 @@ from model import AudioCNN
 import io
 import numpy as np
 import librosa
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 class AudioProcessor:
     def __init__(self):
@@ -18,7 +20,7 @@ class AudioProcessor:
                 hop_length=512,
                 n_mels=128,
                 f_min=0,
-                f_max=11025
+                f_max=11025,
             ),
             T.AmplitudeToDB()
         )
@@ -65,11 +67,12 @@ class AudioClassifier:
         if audio_data.ndim > 1:
             audio_data = np.mean(audio_data, axis=1)
             
-        if sample_rate != 44100:
+        target_sample_rate = 44100
+        if sample_rate != target_sample_rate:
             audio_data = librosa.resample(
                 y=audio_data, 
                 orig_sr=sample_rate, 
-                target_sr=44100
+                target_sr=target_sample_rate
             )
             
         spectrogram = self.audio_processor.process_audio_chunk(audio_data)
@@ -117,12 +120,33 @@ class AudioClassifier:
             },
             "waveform": {
                 "values": waveform_data.tolist(),
-                "sample_rate": 44100,
-                "duration": len(audio_data) / 44100
+                "sample_rate": target_sample_rate,
+                "duration": len(audio_data) / target_sample_rate
             }
         }
         
         return response
+
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+classifier = AudioClassifier()
+classifier.load_model()
+
+
+@app.post("/inference")
+def inference(request: InferenceRequest):
+    try:
+        return classifier.inference(request)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
     
 def main():
     audio_data, sample_rate = sf.read("cock.wav")
@@ -148,4 +172,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)

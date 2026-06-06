@@ -44,7 +44,7 @@ class ESC50Dataset(Dataset):
         if waveform.shape[0] > 1:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
 
-        target_sample_rate = 22050
+        target_sample_rate = 44100
         if sample_rate != target_sample_rate:
             waveform = torchaudio.functional.resample(waveform, sample_rate, target_sample_rate)
             
@@ -80,7 +80,7 @@ def train():
     esc50_dir = "data"
     
     train_transform = nn.Sequential(
-        T.MelSpectrogram(sample_rate=22050,
+        T.MelSpectrogram(sample_rate=44100,
                             n_mels=128,
                             n_fft=1024,
                             hop_length=512,
@@ -93,7 +93,7 @@ def train():
     )
     
     val_transform = nn.Sequential(
-        T.MelSpectrogram(sample_rate=22050,
+        T.MelSpectrogram(sample_rate=44100,
                             n_mels=128,
                             n_fft=1024,
                             hop_length=512,
