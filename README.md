@@ -18,9 +18,10 @@
 =======
 [![Next.js](https://img.shields.io/badge/Next.js-15.x-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/react-18.x-blue?logo=react&logoColor=white)](https://react.dev/)
->>>>>>> 04044bf20a368e46b10410dc9e24205df4389297
 
 I built this project as a small, local-first demo that stitches together a PyTorch audio classifier (ESC-50 style) with a Next.js visualizer UI. I followed a helpful YouTube tutorial to get started, then made several changes and improvements myself to fit my needs and learn the stack.
+
+Live Demo : https://audio-classifier-eight.vercel.app
 
 <img width="1920" height="1609" alt="image" src="https://github.com/user-attachments/assets/380e2285-1f83-416b-83f1-ca3bc4ba4c5c" />
 
