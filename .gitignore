@@ -15,7 +15,6 @@ env/
 
 # Data files (do not commit)
 /data/
-/models/
 
 # Application logs and runtime artifacts
 logs/
@@ -30,10 +29,6 @@ run_*/
 
 # macOS
 .DS_Store
-
-# PyTorch
-*.pt
-*.pth
 
 # Python testing / tooling
 .pytest_cache/

@@ -10,6 +10,7 @@ import numpy as np
 import librosa
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 class AudioProcessor:
     def __init__(self):
@@ -24,7 +25,7 @@ class AudioProcessor:
             ),
             T.AmplitudeToDB()
         )
-        
+
     def process_audio_chunk(self, audio_data):
         waveform = torch.from_numpy(audio_data).float()
         
@@ -33,10 +34,10 @@ class AudioProcessor:
         spectogram = self.transform(waveform)
         
         return spectogram.unsqueeze(0)
-    
+
 class InferenceRequest(BaseModel):
     audio_data: str
-    
+
 class AudioClassifier:
     def load_model(self):
         print("Loading model...")
@@ -147,7 +148,7 @@ def inference(request: InferenceRequest):
         return classifier.inference(request)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    
+
 def main():
     audio_data, sample_rate = sf.read("cock.wav")
     
@@ -173,5 +174,4 @@ def main():
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
