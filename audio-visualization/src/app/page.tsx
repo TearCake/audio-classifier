@@ -1,12 +1,13 @@
 "use client";
 import { Button } from "~/components/ui/button";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Progress } from "~/components/ui/progress";
 import ColorScale from "~/components/ColorScale";
 import FeatureMap from "~/components/FeatureMap";
 import Waveform from "~/components/Waveform";
+
 
 interface Prediction {
   class: string;
@@ -18,9 +19,7 @@ interface LayerData {
   values: number[][];
 }
 
-interface VisualizationData {
-  [layerName: string]: LayerData;
-}
+type VisualizationData = Record<string, LayerData>;
 
 interface WaveformData {
   values: number[];
@@ -89,7 +88,7 @@ const ESC50_EMOJI_MAP: Record<string, string> = {
 };
 
 const getEmojiForClass = (className: string): string => {
-  return ESC50_EMOJI_MAP[className] || "❓";
+  return ESC50_EMOJI_MAP[className] ?? "❓";
 };
 
 function splitLayers(visualization: VisualizationData) {
@@ -103,7 +102,7 @@ function splitLayers(visualization: VisualizationData) {
       const [parent] = name.split(".");
       if (parent === undefined) continue;
 
-      if (!internals[parent]) internals[parent] = [];
+      internals[parent] ??= [];
       internals[parent].push([name, data]);
     }
   }
@@ -118,7 +117,7 @@ export default function HomePage() {
   const [filename, setFilename] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -129,14 +128,16 @@ export default function HomePage() {
 
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
+
     reader.onload = async () => {
       try {
-        const arrayBuffer = reader.result as ArrayBuffer;
+        if (!(reader.result instanceof ArrayBuffer)) {
+          throw new Error("Failed to read the selected file.");
+        }
+
+        const arrayBuffer = reader.result;
         const base64String = btoa(
-          new Uint8Array(arrayBuffer).reduce(
-            (data, byte) => data + String.fromCharCode(byte),
-            '',
-          )
+          Array.from(new Uint8Array(arrayBuffer), (byte) => String.fromCharCode(byte)).join(""),
         );
 
         const response = await fetch("/api/upload", {
@@ -145,14 +146,13 @@ export default function HomePage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ audio_data: base64String }),
-        },
-        );
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! ${response.statusText}`);
         }
 
-        const data: ApiResponse = await response.json();
+        const data = (await response.json()) as ApiResponse;
         setVizData(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An unknown error occurred.");
@@ -160,10 +160,11 @@ export default function HomePage() {
         setIsLoading(false);
       }
     };
+
     reader.onerror = () => {
       setError("Failed to read the file. Please try again.");
       setIsLoading(false);
-    }
+    };
   };
 
   const { main, internals } = vizData
@@ -178,7 +179,7 @@ export default function HomePage() {
             Audio Visualizer
           </h1>
           <p className="mb-8 text-md text-stone-600">
-            Upload a WAV file to see the model's predictions and feature maps
+            Upload a WAV file to see the model predictions and feature maps
           </p>
 
           <div className="flex flex-col items-center">
