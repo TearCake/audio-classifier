@@ -3,7 +3,6 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-%5E2.0-red?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-stable-green?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-<<<<<<< HEAD
 [![Uvicorn](https://img.shields.io/badge/Uvicorn-latest-teal)](https://www.uvicorn.org/)
 [![Node.js](https://img.shields.io/badge/node-18%2B-green?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![npm](https://img.shields.io/badge/npm-9%2B-red?logo=npm&logoColor=white)](https://www.npmjs.com/)
