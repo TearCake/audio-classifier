@@ -1,0 +1,10 @@
+.venv
+__pycache__
+*.pyc
+.git
+.gitignore
+audio-visualization
+data
+models/logs
+README.md
+image.png
