@@ -10,6 +10,7 @@ import numpy as np
 import librosa
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 import os
 
 class AudioProcessor:
@@ -97,32 +98,36 @@ class AudioClassifier:
                     squeezed_tensor = aggreagted_tensor.squeeze(0)
                     numpy_array = squeezed_tensor.cpu().numpy()
                     clean_array = np.nan_to_num(numpy_array)
+                    rounded_array = np.round(clean_array, 2)
                     viz_data[name] = {
-                        "shape": list(clean_array.shape),
-                        "values": clean_array.tolist()
+                        "shape": list(rounded_array.shape),
+                        "values": rounded_array.tolist()
                     }
             
             spectogram_np = spectrogram.squeeze(0).squeeze(0).cpu().numpy()
             clean_spectrogram = np.nan_to_num(spectogram_np)
+            rounded_spectrogram = np.round(clean_spectrogram, 2)
             
-            max_samples = 8000
+            max_samples = 4000
             if len(audio_data) > max_samples:
                 step = len(audio_data) // max_samples
                 waveform_data = audio_data[::step]
             else:
                 waveform_data = audio_data
             
+            rounded_waveform = np.round(waveform_data, 3)
+            
         response = {
             "predictions": predictions,
             "visualization": viz_data,
             "input_spectrogram": {
-                "shape": list(clean_spectrogram.shape),
-                "values": clean_spectrogram.tolist()
+                "shape": list(rounded_spectrogram.shape),
+                "values": rounded_spectrogram.tolist()
             },
             "waveform": {
-                "values": waveform_data.tolist(),
+                "values": rounded_waveform.tolist(),
                 "sample_rate": target_sample_rate,
-                "duration": len(audio_data) / target_sample_rate
+                "duration": round(len(audio_data) / target_sample_rate, 2)
             }
         }
         
@@ -132,11 +137,12 @@ class AudioClassifier:
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 classifier = AudioClassifier()
 classifier.load_model()
