@@ -7,6 +7,7 @@ import { Progress } from "~/components/ui/progress";
 import ColorScale from "~/components/ColorScale";
 import FeatureMap from "~/components/FeatureMap";
 import Waveform from "~/components/Waveform";
+import { processAndTrimAudio } from "~/lib/audio";
 
 
 interface Prediction {
@@ -117,6 +118,8 @@ export default function HomePage() {
   const [filename, setFilename] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const [trimInfo, setTrimInfo] = useState<string | null>(null);
+
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -125,46 +128,42 @@ export default function HomePage() {
     setIsLoading(true);
     setError(null);
     setVizData(null);
+    setTrimInfo(null);
 
-    const reader = new FileReader();
-    reader.readAsArrayBuffer(file);
+    try {
+      const { base64String, duration, originalDuration } =
+        await processAndTrimAudio(file, 5.0);
 
-    reader.onload = async () => {
-      try {
-        if (!(reader.result instanceof ArrayBuffer)) {
-          throw new Error("Failed to read the selected file.");
-        }
-
-        const arrayBuffer = reader.result;
-        const base64String = btoa(
-          Array.from(new Uint8Array(arrayBuffer), (byte) => String.fromCharCode(byte)).join(""),
+      if (originalDuration > 5.2) {
+        setTrimInfo(
+          `Auto-trimmed to first ${duration.toFixed(1)}s (original: ${originalDuration.toFixed(1)}s)`,
         );
-
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ audio_data: base64String }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! ${response.statusText}`);
-        }
-
-        const data = (await response.json()) as ApiResponse;
-        setVizData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An unknown error occurred.");
-      } finally {
-        setIsLoading(false);
       }
-    };
 
-    reader.onerror = () => {
-      setError("Failed to read the file. Please try again.");
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ audio_data: base64String }),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(
+          errorBody?.error ?? `Server error (${response.status}: ${response.statusText})`,
+        );
+      }
+
+      const data = (await response.json()) as ApiResponse;
+      setVizData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred.");
+    } finally {
       setIsLoading(false);
-    };
+    }
   };
 
   const { main, internals } = vizData
@@ -186,7 +185,7 @@ export default function HomePage() {
             <div className="relative inline-block">
               <input
                 type="file"
-                accept=".wav"
+                accept=".wav,.mp3,audio/*"
                 className="absolute inset-0 w-full opacity-0 cursor-pointer"
                 id="file-upload"
                 onChange={handleFileChange}
@@ -198,16 +197,24 @@ export default function HomePage() {
                 variant="outline"
                 size="lg"
               >
-                {isLoading ? "Uploading..." : "Upload WAV File"}
+                {isLoading ? "Processing & Uploading..." : "Upload Audio File"}
               </Button>
             </div>
 
             {filename && (
-              <Badge
-                variant="secondary"
-                className="mt-4 bg-stone-200 text-stone-700">
-                {filename}
-              </Badge>)}
+              <div className="mt-4 flex flex-col items-center gap-1.5">
+                <Badge
+                  variant="secondary"
+                  className="bg-stone-200 text-stone-700">
+                  {filename}
+                </Badge>
+                {trimInfo && (
+                  <span className="text-xs text-stone-500">
+                    ⚡ {trimInfo}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
