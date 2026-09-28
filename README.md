@@ -20,8 +20,6 @@
 
 I built this project as a small, local-first demo that stitches together a PyTorch audio classifier (ESC-50 style) with a Next.js visualizer UI. I followed a helpful YouTube tutorial to get started, then made several changes and improvements myself to fit my needs and learn the stack.
 
-Live Demo : https://audio-classifier-eight.vercel.app
-
 <img width="1920" height="1609" alt="image" src="https://github.com/user-attachments/assets/380e2285-1f83-416b-83f1-ca3bc4ba4c5c" />
 
 ## What it does
