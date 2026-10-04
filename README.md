@@ -22,6 +22,8 @@ I built this project as a small, local-first demo that stitches together a PyTor
 
 <img width="1920" height="1609" alt="image" src="https://github.com/user-attachments/assets/380e2285-1f83-416b-83f1-ca3bc4ba4c5c" />
 
+<img width="5273" height="6290" alt="diagram(1)" src="https://github.com/user-attachments/assets/bfe12744-a5f5-4423-affa-511fa8e10c3e" />
+
 ## What it does
 - Upload a WAV file from the browser and get back model predictions, an input spectrogram, and feature-map visualizations.
 - Run inference with a PyTorch `AudioCNN` model and return structured JSON from a FastAPI endpoint.
